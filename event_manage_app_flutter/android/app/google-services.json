@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "779425343231",
+    "project_id": "fc-inoutlog-molto",
+    "storage_bucket": "fc-inoutlog-molto.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779425343231:android:e134758a08156e07fa0eca",
+        "android_client_info": {
+          "package_name": "com.molto.in_out_mobile_app_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779425343231-1307t0ptmu0utl5trh3cs79vfgrjtiii.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvt8l4cJPaAALrY4RpaIN7VQVc7Q3jLs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779425343231-1307t0ptmu0utl5trh3cs79vfgrjtiii.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
