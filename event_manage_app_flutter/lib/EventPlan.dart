@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+import 'package:url_launcher/url_launcher.dart';  //URL起動
+
+
 class EventPlan extends StatefulWidget {
   EventPlan({Key key, this.title}):super(key: key);
 
@@ -14,7 +17,21 @@ class EventPlan extends StatefulWidget {
 class _EventPlanState extends State<EventPlan> {
 
   final _inputTextController = TextEditingController();
-  // final String _inputText = '';
+
+  String _url; //確認用URL
+
+  RegExp matches;
+
+  bool result;
+
+  void initState() {
+    _url = '';
+  }
+
+  //ボタンを押したら、URL起動
+  void _launchURL() async =>{
+    await launch(_url) 
+  };
 
   //モーダル表示
   Future<void> _showMyDialog() async {
@@ -41,7 +58,10 @@ class _EventPlanState extends State<EventPlan> {
             child: Text('OK'),
             onPressed: () {
               setState(() {
-                _inputTextController.text; //入力値を受け取る
+                  result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputTextController.text); //入力値がURLになっているか確認する
+                  if(result == true){
+                    _url = _inputTextController.text; //URLの場合、_urlに入れる
+                  }
               });
               Navigator.of(context).pop();
             },
@@ -65,7 +85,17 @@ class _EventPlanState extends State<EventPlan> {
         title: Text('イベント')
       ),
       body: Container(
-        child: Text(_inputTextController.text) //入力値を表示する
+        child: Column(
+          children: [
+            (_url == '') 
+            ?
+            Text(_inputTextController.text) //URLでない場合
+            : 
+            GestureDetector(
+              onTap: _launchURL, //URLの場合
+              child:Text(_url)
+            )
+          ],)
       ),
       // テキスト入力画面をモーダルで出すボタン
       floatingActionButton: FloatingActionButton(
