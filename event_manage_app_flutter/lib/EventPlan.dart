@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:url_launcher/url_launcher.dart';  //URL起動
+// import 'package:url_launcher/url_launcher.dart';  //URL起動
+
+import 'package:webview_flutter/webview_flutter.dart'; //iframe
+
+import 'dart:io'; //iframe Android
 
 
 class EventPlan extends StatefulWidget {
@@ -16,7 +20,9 @@ class EventPlan extends StatefulWidget {
 
 class _EventPlanState extends State<EventPlan> {
 
-  final _inputTextController = TextEditingController();
+  final _inputTitleController = TextEditingController();
+  final _inputUrlController = TextEditingController();
+  // WebViewController _controller;
 
   String _url; //確認用URL
 
@@ -24,14 +30,14 @@ class _EventPlanState extends State<EventPlan> {
 
   bool result;
 
+  // final flutterWebviewPlugin = new FlutterWebviewPlugin();
+
+
   void initState() {
     _url = '';
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
   }
 
-  //ボタンを押したら、URL起動
-  void _launchURL() async =>{
-    await launch(_url) 
-  };
 
   //モーダル表示
   Future<void> _showMyDialog() async {
@@ -45,9 +51,15 @@ class _EventPlanState extends State<EventPlan> {
           child: ListBody(
             children: <Widget>[
               TextField(
-                controller: _inputTextController,
+                controller: _inputTitleController, //タイトルの入力欄
                 decoration: InputDecoration(
                   hintText: "イベント名",
+                ),
+              ),
+              TextField(
+                controller: _inputUrlController, //URLやメモの入力欄
+                decoration: InputDecoration(
+                  hintText: "URLまたはメモ",
                 ),
               ),
             ],
@@ -58,9 +70,11 @@ class _EventPlanState extends State<EventPlan> {
             child: Text('OK'),
             onPressed: () {
               setState(() {
-                  result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputTextController.text); //入力値がURLになっているか確認する
+                  result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputUrlController.text); //入力値がURLになっているか確認する
+                  print(_url);
                   if(result == true){
-                    _url = _inputTextController.text; //URLの場合、_urlに入れる
+                    _url = _inputUrlController.text;
+                     print(_url);
                   }
               });
               Navigator.of(context).pop();
@@ -78,35 +92,53 @@ class _EventPlanState extends State<EventPlan> {
   );
 }
 
+// URL先のリンクとタイトルのリスト
+List<Widget> _eventList(int size, int sliverChildCount) {
+    final widgetList = new List<Widget>();
+    for (int index = 0; index < size; index++)
+      widgetList
+        ..add(SliverAppBar(
+           title: Text(_inputTitleController.text),
+           pinned: true,
+         ))
+        ..add(SliverFixedExtentList(
+          itemExtent: 200.0,
+          delegate:
+              SliverChildBuilderDelegate((BuildContext context, int index) { //contextが中身、indexがひとまとまりの数
+                return 
+                ( _url != '') ?
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.80,
+                    height: MediaQuery.of(context).size.height * 0.50,
+                    child: WebView(
+                      initialUrl: _url,
+                      javascriptMode: JavascriptMode.unrestricted,
+                    ),
+                  )
+                : 
+                  Container(
+                  child: Text(_inputUrlController.text),
+                  );  
+              }, childCount: sliverChildCount),
+        ));
+   return widgetList;
+}
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
         title: Text('イベント')
       ),
-      body: Container(
-        child: Column(
-          children: [
-            (_url == '') 
-            ?
-            Text(_inputTextController.text) //URLでない場合
-            : 
-            GestureDetector(
-              onTap: _launchURL, //URLの場合
-              child:Text(_url)
-            )
-          ],)
+      body: 
+      CustomScrollView(
+          slivers: _eventList(1,1),
       ),
-      // テキスト入力画面をモーダルで出すボタン
-      floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: _showMyDialog,
         child: Icon(Icons.add),
-      ),
+      )
     );
   }
 }
-
-
-
-
