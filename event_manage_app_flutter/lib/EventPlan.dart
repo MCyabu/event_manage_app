@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-// import 'package:url_launcher/url_launcher.dart';  //URL起動
-
 import 'package:webview_flutter/webview_flutter.dart'; //iframe
 
 import 'dart:io'; //iframe Android
@@ -20,26 +18,24 @@ class EventPlan extends StatefulWidget {
 
 class _EventPlanState extends State<EventPlan> {
 
-  final _inputTitleController = TextEditingController();
-  final _inputUrlController = TextEditingController();
-  // WebViewController _controller;
+  final _inputTitleController = TextEditingController(); //リストタイトルの入力値を受け取る
+  final _inputUrlController = TextEditingController(); //リストのURLまたはメモの入力値を受け取る
 
-  String _url; //確認用URL
+  String _url; //リストのURLまたはメモの入力値が、URLだった場合に、入れる
 
-  RegExp matches;
-
-  bool result;
-
-  // final flutterWebviewPlugin = new FlutterWebviewPlugin();
-
+  // final eventList = new List<Widget>();  //１つ１つのイベント情報（タイトル+URLまたはメモ）が入った配列
+  List<String> eventTitleList;  //イベント情報のうち、タイトルが入った配列
+  List<String> eventValueList;  //イベント情報のうち、URLまたはメモが入った配列
 
   void initState() {
+
     _url = '';
-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+    eventTitleList = [];
+    eventValueList = [];
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();  
   }
 
-
-  //モーダル表示
+  //モーダル表示（タイトルと、URLまたはメモの情報を取得する）
   Future<void> _showMyDialog() async {
   return showDialog<void>(
     context: context,
@@ -57,7 +53,7 @@ class _EventPlanState extends State<EventPlan> {
                 ),
               ),
               TextField(
-                controller: _inputUrlController, //URLやメモの入力欄
+                controller: _inputUrlController, //URLまたはメモの入力欄
                 decoration: InputDecoration(
                   hintText: "URLまたはメモ",
                 ),
@@ -65,17 +61,17 @@ class _EventPlanState extends State<EventPlan> {
             ],
           ),
         ),
-        actions: <Widget>[
+        actions: <Widget>[ 
           TextButton(
             child: Text('OK'),
             onPressed: () {
               setState(() {
-                  result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputUrlController.text); //入力値がURLになっているか確認する
-                  print(_url);
-                  if(result == true){
-                    _url = _inputUrlController.text;
-                     print(_url);
-                  }
+                  // bool result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputUrlController.text); //入力値がURLか確認する
+                  // if(result == true){  //URLだった場合
+                  _url = _inputUrlController.text; 
+                  // }
+                  eventTitleList.add(_inputTitleController.text);  //タイトルを追加
+                  eventValueList.add(_url);  //URLまたはメモを追加
               });
               Navigator.of(context).pop();
             },
@@ -92,36 +88,51 @@ class _EventPlanState extends State<EventPlan> {
   );
 }
 
-// URL先のリンクとタイトルのリスト
-List<Widget> _eventList(int size, int sliverChildCount) {
-    final widgetList = new List<Widget>();
-    for (int index = 0; index < size; index++)
-      widgetList
-        ..add(SliverAppBar(
-           title: Text(_inputTitleController.text),
-           pinned: true,
-         ))
-        ..add(SliverFixedExtentList(
-          itemExtent: 200.0,
-          delegate:
-              SliverChildBuilderDelegate((BuildContext context, int index) { //contextが中身、indexがひとまとまりの数
-                return 
-                ( _url != '') ?
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.80,
-                    height: MediaQuery.of(context).size.height * 0.50,
-                    child: WebView(
-                      initialUrl: _url,
-                      javascriptMode: JavascriptMode.unrestricted,
-                    ),
+// リストの表示
+Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、または空白文字）
+  return
+    CustomScrollView(
+      slivers: <Widget>[
+        SliverPadding(
+          padding: const EdgeInsets.all(20.0),
+          sliver: SliverFixedExtentList(
+            itemExtent: 400.0,
+            delegate:  //実際のグリッドに入るコンテンツを生成するウィジットが入る
+            SliverChildBuilderDelegate(
+              (BuildContext context, int index)  //childCount--->index
+              {
+              print(index);
+              print(eventValueList);
+              return 
+              Container(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Text(eventTitleList[index]),
+                        (RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(eventValueList[index])) ? //urlの中身がURL表記の場合
+                          Container(
+                            width: MediaQuery.of(context).size.width * 1.0,
+                            height: MediaQuery.of(context).size.height * 1.0,
+                            child: WebView(
+                              initialUrl: eventValueList[index],
+                              javascriptMode: JavascriptMode.unrestricted,
+                            ),
+                          )
+                        : 
+                          Container(
+                          child: Text(eventValueList[index]),
+                          ), 
+                    ]
                   )
-                : 
-                  Container(
-                  child: Text(_inputUrlController.text),
-                  );  
-              }, childCount: sliverChildCount),
-        ));
-   return widgetList;
+                )
+              );
+            },
+              childCount: eventValueList.length,
+            ),
+          )
+        ),
+      ]
+    );
 }
 
   @override
@@ -130,13 +141,11 @@ List<Widget> _eventList(int size, int sliverChildCount) {
       appBar: AppBar(
         title: Text('イベント')
       ),
-      body: 
-      CustomScrollView(
-          slivers: _eventList(1,1),
-      ),
-        floatingActionButton: FloatingActionButton(
+      body:
+        _viewEventList(),
+        floatingActionButton: FloatingActionButton(  //モーダル表示ボタン
         backgroundColor: Colors.blue,
-        onPressed: _showMyDialog,
+        onPressed: _showMyDialog,  //モーダルを呼び出す、モーダルがリストを受け取る
         child: Icon(Icons.add),
       )
     );
