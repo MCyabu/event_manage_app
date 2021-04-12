@@ -27,8 +27,9 @@ class _EventPlanState extends State<EventPlan> {
   List<String> eventTitleList;  //イベント情報のうち、タイトルが入った配列
   List<String> eventValueList;  //イベント情報のうち、URLまたはメモが入った配列
 
+  @override
   void initState() {
-
+   super.initState();
     _url = '';
     eventTitleList = [];
     eventValueList = [];
@@ -66,6 +67,9 @@ class _EventPlanState extends State<EventPlan> {
             child: Text('OK'),
             onPressed: () {
               setState(() {
+               if (!mounted) {  //解決したけど理由がわからない
+                  return;
+                }
                   // bool result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputUrlController.text); //入力値がURLか確認する
                   // if(result == true){  //URLだった場合
                   _url = _inputUrlController.text; 
@@ -109,6 +113,20 @@ Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、�
                   child: Column(
                     children: [
                       Text(eventTitleList[index]),
+                      RaisedButton(
+                        child: const Text('削除'),
+                        color: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        onPressed: () {
+                          setState((){
+                            int _eventValueId = index; //evetValueListのindexを取得する
+                            eventValueList.removeAt(_eventValueId); //リストから削除する
+                            eventTitleList.removeAt(_eventValueId); //リストから削除する
+                          });
+                        },
+                      ),
                         (RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(eventValueList[index])) ? //urlの中身がURL表記の場合
                           Container(
                             width: MediaQuery.of(context).size.width * 1.0,
