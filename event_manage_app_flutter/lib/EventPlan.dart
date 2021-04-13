@@ -1,46 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:webview_flutter/webview_flutter.dart'; //iframe
+import 'package:webview_flutter/webview_flutter.dart'; //webView用ライブラリ。URL画像を表示する。
 
-import 'dart:io'; //iframe Android
+import 'dart:io'; //webViewをAndroidで使うために必要
 
 
-class EventPlan extends StatefulWidget {
-  EventPlan({Key key, this.title}):super(key: key);
+class EventPlan extends StatefulWidget {  
+  EventPlan({Key key,this.dataList}):super(key: key);
 
-  final String title;
-
+  final List<EventList> dataList; //遷移元から渡される値
   @override
 
   _EventPlanState createState() => _EventPlanState();
 }
 
+// EventListクラス
+class EventList{
+  String eventTitle;  //タイトル
+  String eventValue;  //URLまたはメモ
+  EventList(this.eventTitle, this.eventValue); //this.フィールド名で、値を代入できる。thisを省略すると、別の仮引数としてアクセスできてしまう
+}
+
 class _EventPlanState extends State<EventPlan> {
 
-  final _inputTitleController = TextEditingController(); //リストタイトルの入力値を受け取る
-  final _inputUrlController = TextEditingController(); //リストのURLまたはメモの入力値を受け取る
+  final TextEditingController _inputTitleController = new TextEditingController(); //リストタイトル。表示でも使う
+  final TextEditingController _inputUrlController = new TextEditingController(); //リストのURLまたはメモ。表示でも使う
 
-  String _url; //リストのURLまたはメモの入力値が、URLだった場合に、入れる
-
-  // final eventList = new List<Widget>();  //１つ１つのイベント情報（タイトル+URLまたはメモ）が入った配列
-  List<String> eventTitleList;  //イベント情報のうち、タイトルが入った配列
-  List<String> eventValueList;  //イベント情報のうち、URLまたはメモが入った配列
+  List<EventList> allEventList ; //EventListインスタンスを入れる配列。表示でも使う。
 
   @override
   void initState() {
    super.initState();
-    _url = '';
-    eventTitleList = [];
-    eventValueList = [];
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();  
+    allEventList = widget.dataList; //Calenderから渡されたdataListをもとに、eventインスタンスを初期化する
   }
 
   //モーダル表示（タイトルと、URLまたはメモの情報を取得する）
   Future<void> _showMyDialog() async {
   return showDialog<void>(
     context: context,
-    barrierDismissible: false, // user must tap button!
+    barrierDismissible: false, 
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text('入力欄'),
@@ -67,15 +67,12 @@ class _EventPlanState extends State<EventPlan> {
             child: Text('OK'),
             onPressed: () {
               setState(() {
-               if (!mounted) {  //解決したけど理由がわからない
+               if (!mounted) { 
                   return;
                 }
-                  // bool result = new RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(_inputUrlController.text); //入力値がURLか確認する
-                  // if(result == true){  //URLだった場合
-                  _url = _inputUrlController.text; 
-                  // }
-                  eventTitleList.add(_inputTitleController.text);  //タイトルを追加
-                  eventValueList.add(_url);  //URLまたはメモを追加
+                  String _url = _inputUrlController.text;  //URLまたはメモを入れる
+                  EventList event = new EventList(_inputTitleController.text,_url);  //情報をもとに新しいインスタンスを作成する
+                  allEventList.add(event);  //インスタンスをaddしていく
               });
               Navigator.of(context).pop();
             },
@@ -105,14 +102,12 @@ Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、�
             SliverChildBuilderDelegate(
               (BuildContext context, int index)  //childCount--->index
               {
-              print(index);
-              print(eventValueList);
               return 
               Container(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Text(eventTitleList[index]),
+                      Text(allEventList[index].eventTitle), 
                       RaisedButton(
                         child: const Text('削除'),
                         color: Colors.orange,
@@ -121,31 +116,30 @@ Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、�
                         ),
                         onPressed: () {
                           setState((){
-                            int _eventValueId = index; //evetValueListのindexを取得する
-                            eventValueList.removeAt(_eventValueId); //リストから削除する
-                            eventTitleList.removeAt(_eventValueId); //リストから削除する
+                            int _eventListId = index; //evetValueListのindexを取得する
+                            allEventList.removeAt(_eventListId); //リストからインスタンスを削除する
                           });
                         },
                       ),
-                        (RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(eventValueList[index])) ? //urlの中身がURL表記の場合
-                          Container(
-                            width: MediaQuery.of(context).size.width * 1.0,
-                            height: MediaQuery.of(context).size.height * 1.0,
-                            child: WebView(
-                              initialUrl: eventValueList[index],
-                              javascriptMode: JavascriptMode.unrestricted,
-                            ),
-                          )
-                        : 
-                          Container(
-                          child: Text(eventValueList[index]),
-                          ), 
-                    ]
+                      (RegExp(r'https?://[a-zA-Z0-9\-%_/=&?.]+').hasMatch(allEventList[index].eventValue)) ? //urlの中身がURL表記の場合
+                        Container(
+                          width: MediaQuery.of(context).size.width * 1.0,
+                          height: MediaQuery.of(context).size.height * 1.0,
+                          child: WebView(
+                            initialUrl: allEventList[index].eventValue,
+                            javascriptMode: JavascriptMode.unrestricted,
+                          ),
+                        )
+                      : 
+                        Container(
+                        child: Text(allEventList[index].eventValue),
+                        ), 
+                      ]
+                    )
                   )
-                )
-              );
-            },
-              childCount: eventValueList.length,
+                );
+              },
+              childCount: allEventList.length,
             ),
           )
         ),
@@ -155,16 +149,22 @@ Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、�
 
   @override
   Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('イベント')
-      ),
-      body:
+    return WillPopScope(
+      onWillPop: () {
+        Navigator.pop(context,allEventList); 
+        return Future.value(false);
+       },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('イベント'),
+        ),
+      body: 
         _viewEventList(),
         floatingActionButton: FloatingActionButton(  //モーダル表示ボタン
         backgroundColor: Colors.blue,
         onPressed: _showMyDialog,  //モーダルを呼び出す、モーダルがリストを受け取る
         child: Icon(Icons.add),
+        )
       )
     );
   }
