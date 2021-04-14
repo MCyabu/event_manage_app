@@ -41,16 +41,13 @@ class _EventPlanState extends State<EventPlan> {
     allEventList = widget.dataList; //Calenderから渡されたdataListをもとに、eventインスタンスを初期化する
   }
 
-  // モーダル表示時に、入力値を空にする
-
-
   //モーダル表示（タイトルと、URLまたはメモの情報を取得する）
   Future<void> _showMyDialog() async {
 
   //ボタン押した時に空欄にする
   _inputTitleController.text = '';  
   _inputUrlController.text = ''; 
-  
+
   return showDialog<void>(
     context: context,
     barrierDismissible: false, 
@@ -79,7 +76,6 @@ class _EventPlanState extends State<EventPlan> {
           TextButton(
             child: Text('OK'),
             onPressed: () {
-              //  print(_inputTitleController.text);
               setState(() {
                 String _url = _inputUrlController.text;  //URLまたはメモを入れる
                 EventList event = new EventList(_inputTitleController.text,_url);  //情報をもとに新しいインスタンスを作成する
