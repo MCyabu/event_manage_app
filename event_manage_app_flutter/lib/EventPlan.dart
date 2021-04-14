@@ -19,6 +19,10 @@ class EventPlan extends StatefulWidget {
 class EventList{
   String eventTitle;  //タイトル
   String eventValue;  //URLまたはメモ
+
+  Map<String,String> toJson() => {"eventTitle":eventTitle, "eventValue":eventValue}; //Jsonエンコードする際に必要
+//Jsonエンコードする際に必要
+
   EventList(this.eventTitle, this.eventValue); //this.フィールド名で、値を代入できる。thisを省略すると、別の仮引数としてアクセスできてしまう
 }
 
