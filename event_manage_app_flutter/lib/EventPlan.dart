@@ -29,6 +29,7 @@ class EventList{
 class _EventPlanState extends State<EventPlan> {
 
   final TextEditingController _inputTitleController = new TextEditingController(); //リストタイトル。表示でも使う
+   
   final TextEditingController _inputUrlController = new TextEditingController(); //リストのURLまたはメモ。表示でも使う
 
   List<EventList> allEventList ; //EventListインスタンスを入れる配列。表示でも使う。
@@ -40,8 +41,16 @@ class _EventPlanState extends State<EventPlan> {
     allEventList = widget.dataList; //Calenderから渡されたdataListをもとに、eventインスタンスを初期化する
   }
 
+  // モーダル表示時に、入力値を空にする
+
+
   //モーダル表示（タイトルと、URLまたはメモの情報を取得する）
   Future<void> _showMyDialog() async {
+
+  //ボタン押した時に空欄にする
+  _inputTitleController.text = '';  
+  _inputUrlController.text = ''; 
+  
   return showDialog<void>(
     context: context,
     barrierDismissible: false, 
@@ -70,13 +79,11 @@ class _EventPlanState extends State<EventPlan> {
           TextButton(
             child: Text('OK'),
             onPressed: () {
+              //  print(_inputTitleController.text);
               setState(() {
-               if (!mounted) { 
-                  return;
-                }
-                  String _url = _inputUrlController.text;  //URLまたはメモを入れる
-                  EventList event = new EventList(_inputTitleController.text,_url);  //情報をもとに新しいインスタンスを作成する
-                  allEventList.add(event);  //インスタンスをaddしていく
+                String _url = _inputUrlController.text;  //URLまたはメモを入れる
+                EventList event = new EventList(_inputTitleController.text,_url);  //情報をもとに新しいインスタンスを作成する
+                allEventList.add(event);  //インスタンスをaddしていく
               });
               Navigator.of(context).pop();
             },
@@ -120,8 +127,7 @@ Widget _viewEventList() { //titleはタイトル、textはURL（中身あり、�
                         ),
                         onPressed: () {
                           setState((){
-                            int _eventListId = index; //evetValueListのindexを取得する
-                            allEventList.removeAt(_eventListId); //リストからインスタンスを削除する
+                            allEventList.removeAt(index); //リストからインスタンスを削除する
                           });
                         },
                       ),
