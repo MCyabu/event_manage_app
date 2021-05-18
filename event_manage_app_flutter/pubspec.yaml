@@ -40,9 +40,10 @@ dependencies:
     font_awesome_flutter: ^8.11.0
     flutter_email_sender: ^4.0.0
     email_validator: ^1.0.6
-    flutter_calendar_carousel: ^1.3.16
+    flutter_calendar_carousel: ^1.5.3
     cast: any
     webview_flutter: ^1.0.7
+    flutter_sticky_header:
 
 dev_dependencies:
     flutter_test:
